@@ -61,7 +61,7 @@ public:
     uint8_t get_sensor_temperature(void)
         const { return get_temperature(_primary); }
     uint8_t get_sensor_temperature(uint8_t instance)
-        const { return sensors[instance].sensor_temperature; }
+        const { return sensors[instance].internal_temperature; }
 
     // accumulate a reading on sensors. Some backends without their
     // own thread or a timer may need this.
@@ -93,7 +93,7 @@ public:
     // settable parameters
     static const struct AP_Param::GroupInfo var_info[];
 
-    // Commented out because laser does not track temperature.
+    // Commented out because laser does not use internal temperature for calibration
     //   -- Scott (01/20/2015)
     //
     // float get_calibration_temperature(void) const { return get_calibration_temperature(_primary); }
@@ -134,18 +134,18 @@ private:
 
         float distance;                 // distance from sensor to target
         uint8_t signal_quality;         // reported sensor signal quality
-        uint8_t sensor_temperature;     // internal sensor temperature in degrees C
+        int8_t internal_temperature;    // internal sensor temperature in degrees C
 
     } sensors[LASER_MAX_INSTANCES];
 
     AP_Int8                             _alt_offset;
     // float                               _last_altitude_EAS2TAS;
     // float                               _EAS2TAS;
-    uint8_t                               _internal_temperature;
-    uint8_t                            _last_internal_temperature_ms;
+    //    uint8_t                             _external_temperature;
+    //    uint8_t                             _last_external_temperature_ms;
     DerivativeFilterFloat_Size7         _climb_rate_filter;
 
-    void SimpleAtmosphere(const float alt, float &sigma, float &delta, float &theta);
+    //    void SimpleAtmosphere(const float alt, float &sigma, float &delta, float &theta);
 };
 
 #include "AP_Laser_Backend.h"

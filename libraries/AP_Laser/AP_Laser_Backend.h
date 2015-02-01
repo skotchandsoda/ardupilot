@@ -23,8 +23,7 @@ protected:
     // reference to frontend object
     AP_Laser &_frontend;
 
-    // Unsure about utility of this -- Scott (01/20/2015)
-    void _copy_to_frontend(uint8_t instance, float pressure, float temperature);
+    void _copy_to_frontend(uint8_t instance, float distance, uint8_t signal_quality, uint8_t internal_temperature);
 };
 
 #endif // __AP_LASER_BACKEND_H__
