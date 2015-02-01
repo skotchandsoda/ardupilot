@@ -27,7 +27,7 @@ class AP_Laser_Backend;
 
 class AP_Laser
 {
-    friend class AP_Baro_Backend;
+    friend class AP_Laser_Backend;
 
 public:
     // constructor
@@ -41,74 +41,50 @@ public:
     void update(void);
 
     // healthy - returns true if sensor and derived altitude are good
-    bool healthy(void) const { return healthy(_primary); }
-    bool healthy(uint8_t instance) const { return sensors[instance].healthy && sensors[instance].alt_ok && sensors[instance].calibrated; }
+    bool healthy(void)
+        const { return healthy(_primary); }
+    bool healthy(uint8_t instance)
+        const { return sensors[instance].healthy
+                    && sensors[instance].alt_ok
+                    && sensors[instance].calibrated; }
 
     // check if all lasers are healthy - used for SYS_STATUS report
     bool all_healthy(void) const;
 
+    // signal quality on 0-255
+    uint8_t get_signal_quality(void)
+        const {return get_signal_quality(_primary); }
+    uint8_t get_signal_quality(uint8_t instance)
+        const { return sensors[instance].signal_quality; }
 
-    // Commented out because lasers do not measure pressure or temperature
-    //   -- Scott (01/20/2015)
-    //
-    // // pressure in Pascal. Divide by 100 for millibars or hectopascals
-    // float get_pressure(void) const { return get_pressure(_primary); }
-    // float get_pressure(uint8_t instance) const { return sensors[instance].pressure; }
-
-    // // temperature in degrees C
-    // float get_temperature(void) const { return get_temperature(_primary); }
-    // float get_temperature(uint8_t instance) const { return sensors[instance].temperature; }
+    // sensor temperature in degrees C
+    uint8_t get_sensor_temperature(void)
+        const { return get_temperature(_primary); }
+    uint8_t get_sensor_temperature(uint8_t instance)
+        const { return sensors[instance].sensor_temperature; }
 
     // accumulate a reading on sensors. Some backends without their
     // own thread or a timer may need this.
     void accumulate(void);
 
-    // calibrate the laser. Barometers need calibration, but do lasers?
-    //  -- Scott (01/20/2015)
-    //
+    // calibrate the laser.
     // This must be called on startup if the
     // altitude/climb_rate/acceleration interfaces are ever used
     void calibrate(void);
 
-    // update the laser calibration.  Is this needed?
-    //   -- Scott (01/20/2015)
-    //
+    // update the laser calibration.
     // Can be used for incremental preflight update of laser
     void update_calibration(void);
 
     // get current altitude in meters relative to altitude at the time
     // of the last calibrate() call
-    float get_altitude(void) const { return get_altitude(_primary); }
-    float get_altitude(uint8_t instance) const { return sensors[instance].altitude; }
+    float get_altitude(void)
+        const { return get_altitude(_primary); }
+    float get_altitude(uint8_t instance)
+        const { return sensors[instance].distance; }
 
-    // get altitude difference in meters relative given a base
-    // pressure in Pascal
-    float get_altitude_difference(float base_pressure, float pressure) const;
-
-    // get scale factor required to convert equivalent to true airspeed
-    float get_EAS2TAS(void);
-
-    // get current climb rate in meters/s. A positive number means
-    // going up
+    // get current climb rate in m/s. A positive number means going up
     float get_climb_rate(void);
-
-    // Commented out because lasers do not read temperature/pressure.
-    //   -- Scott (01/20/2015)
-    //
-    // ground temperature in degrees C
-    // the ground values are only valid after calibration
-    // float get_ground_temperature(void) const { return get_ground_temperature(_primary); }
-    // float get_ground_temperature(uint8_t i)  const { return sensors[i].ground_temperature.get(); }
-
-    // // ground pressure in Pascal
-    // // the ground values are only valid after calibration
-    // float get_ground_pressure(void) const { return get_ground_pressure(_primary); }
-    // float get_ground_pressure(uint8_t i)  const { return sensors[i].ground_pressure.get(); }
-
-    // // set the temperature to be used for altitude calibration. This
-    // // allows an external temperature source (such as a digital
-    // // airspeed sensor) to be used as the temperature source
-    // void set_external_temperature(float temperature);
 
     // get last time sample was taken (in ms)
     uint32_t get_last_update(void) const { return get_last_update(_primary); }
@@ -136,7 +112,8 @@ public:
     uint8_t register_sensor(void);
 
     // return number of registered sensors
-    uint8_t num_instances(void) const { return _num_sensors; }
+    uint8_t num_instances(void)
+        const { return _num_sensors; }
 
 private:
     // how many drivers do we have?
@@ -153,31 +130,25 @@ private:
         uint32_t last_update_ms;        // last update time in ms
         bool healthy:1;                 // true if sensor is healthy
         bool alt_ok:1;                  // true if calculated altitude is ok
-        bool calibrated:1;              // true if calculated calibrated successfully
+        bool calibrated:1;              // true if calibrated successfully
 
-        // float pressure;                 // pressure in Pascal
-        // float temperature;              // temperature in degrees C
+        float distance;                 // distance from sensor to target
+        uint8_t signal_quality;         // reported sensor signal quality
+        uint8_t sensor_temperature;     // internal sensor temperature in degrees C
 
-        float altitude;                 // calculated altitude
-
-        // AP_Float ground_temperature;
-        // AP_Float ground_pressure;
     } sensors[LASER_MAX_INSTANCES];
 
     AP_Int8                             _alt_offset;
-    float                               _last_altitude_EAS2TAS;
-    float                               _EAS2TAS;
-    // float                               _external_temperature;
-    // uint32_t                            _last_external_temperature_ms;
+    // float                               _last_altitude_EAS2TAS;
+    // float                               _EAS2TAS;
+    uint8_t                               _internal_temperature;
+    uint8_t                            _last_internal_temperature_ms;
     DerivativeFilterFloat_Size7         _climb_rate_filter;
 
     void SimpleAtmosphere(const float alt, float &sigma, float &delta, float &theta);
 };
 
 #include "AP_Laser_Backend.h"
-// #include "AP_Baro_MS5611.h"
-// #include "AP_Baro_BMP085.h"
-// #include "AP_Baro_HIL.h"
-// #include "AP_Baro_PX4.h"
+#include "AP_Laser_AR2500.h"
 
 #endif // __AP_LASER_H__
